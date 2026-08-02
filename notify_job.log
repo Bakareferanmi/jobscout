@@ -131,3 +131,39 @@ Traceback (most recent call last):
     time.sleep(delay)
     ~~~~~~~~~~^^^^^^^
 KeyboardInterrupt
+[notify] fetching jobs: Frontend (Intern/Junior)...
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] rate limited on https://www.reddit.com/r/remotejs/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/remotejs/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/remotejs/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/remotejs/new/.rss
+[notify]   2 new job listing(s)
+[notify] fetching jobs: Data Analysis...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching jobs: Social Media / Digital Marketing...
+ [warn] weworkremotely feed didn't parse as XML — check https://weworkremotely.com/categories/remote-marketing-jobs.rss
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching jobs: Electrical/Electronics Engineering (Entry-level)...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching jobs: IT Support...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+[notify]   0 new job listing(s)
+No new listings above threshold. No notification sent.
+[notify] fetching jobs: Frontend (Intern/Junior)...
