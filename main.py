@@ -74,7 +74,7 @@ def _save_listings(raw, cat, kind_override=None):
             "url": item["url"],
             "source": item["source"],
             "posted": item.get("posted", ""),
-            "score": scoring.score_listing(item["title"], cat),
+            "score": scoring.score_listing(item["title"], cat, item.get("posted", "")),
         }
         if storage.upsert_listing(listing):
             new_count += 1
@@ -184,6 +184,51 @@ def cmd_export(args):
     print(f"Exported {len(rows)} listings to {args.output}")
 
 
+def cmd_review(args):
+    """Walk through 'new' listings one at a time and triage with a single keystroke."""
+    storage.init_db()
+    rows = storage.list_listings(
+        category=args.category, status="new", kind=args.kind,
+        limit=args.limit, min_score=args.min_score,
+    )
+    if not rows:
+        print("No new listings to review.")
+        return
+
+    print(f"Reviewing {len(rows)} new listing(s).")
+    print("[s] save   [a] applied   [r] reject   [enter] skip   [q] quit\n")
+
+    reviewed = 0
+    for i, r in enumerate(rows, 1):
+        tag = "[JOB]" if r["kind"] == "job" else "[CLIENT]"
+        print(f"--- {i}/{len(rows)} ---")
+        print(f"{tag} score={r['score']}  {r['title']}")
+        print(f"{r['company'] or '—'} | {r['category']} | via {r['source']}")
+        print(f"{r['url']}")
+
+        choice = input("> ").strip().lower()
+
+        if choice == "q":
+            print("\nStopped early.")
+            break
+        elif choice == "s":
+            storage.set_status(r["id"], "saved")
+            print(" -> saved\n")
+            reviewed += 1
+        elif choice == "a":
+            storage.set_status(r["id"], "applied")
+            print(" -> applied\n")
+            reviewed += 1
+        elif choice == "r":
+            storage.set_status(r["id"], "rejected")
+            print(" -> rejected\n")
+            reviewed += 1
+        else:
+            print(" -> skipped\n")
+
+    print(f"Review session complete. {reviewed} listing(s) updated.")
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="jobscout", description="Find and track jobs + client gigs across your target categories.")
     sub = p.add_subparsers(dest="command", required=True)
@@ -221,6 +266,13 @@ def build_parser():
     ex.add_argument("--min-score", type=int, default=None, dest="min_score")
     ex.add_argument("--output", default="jobscout_export.csv")
     ex.set_defaults(func=cmd_export)
+
+    rv = sub.add_parser("review", help="Interactively triage new listings one at a time")
+    rv.add_argument("--category", choices=list(config.CATEGORIES.keys()))
+    rv.add_argument("--kind", choices=["job", "client"])
+    rv.add_argument("--min-score", type=int, default=None, dest="min_score")
+    rv.add_argument("--limit", type=int, default=25)
+    rv.set_defaults(func=cmd_review)
 
     return p
 
