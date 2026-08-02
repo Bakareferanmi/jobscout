@@ -3,22 +3,40 @@ Each fetch_* function returns a list of raw dicts:
 {title, company, location, url, posted, source, kind}
 kind is 'job' or 'client'. No filtering/scoring happens here.
 """
+
+import time
 import requests
 import xml.etree.ElementTree as ET
 from urllib.parse import quote
 
 HEADERS = {"User-Agent": "JobScoutCLI/1.0 (personal job search tool)"}
+# Reddit rate-limits generic UAs hard — use something descriptive.
+REDDIT_HEADERS = {"User-Agent": "python:jobscout-cli:1.0 (personal use)"}
 TIMEOUT = 15
+MAX_RETRIES = 2
+RETRY_BACKOFF = 1.5  # seconds, doubles each retry
 
 
-def _safe_get(url, params=None):
-    try:
-        resp = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
-        resp.raise_for_status()
-        return resp
-    except requests.RequestException as e:
-        print(f"  [warn] request failed for {url}: {e}")
-        return None
+def _safe_get(url, params=None, headers=None, retries=MAX_RETRIES):
+    headers = headers or HEADERS
+    delay = RETRY_BACKOFF
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=TIMEOUT)
+            if resp.status_code == 429 and attempt < retries:
+                print(f" [warn] rate limited on {url}, retrying in {delay:.1f}s")
+                time.sleep(delay)
+                delay *= 2
+                continue
+            resp.raise_for_status()
+            return resp
+        except requests.RequestException as e:
+            if attempt < retries:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            print(f" [warn] request failed for {url}: {e}")
+            return None
 
 
 def fetch_remotive(category_key: str, remotive_category: str, search: str = ""):
@@ -135,14 +153,14 @@ def fetch_wwr_rss(feed_url: str):
                 "kind": "job",
             })
     except ET.ParseError:
-        pass
+        print(f" [warn] weworkremotely feed didn't parse as XML — check {feed_url}")
     return out
 
 
 def fetch_reddit(subreddit: str):
     """Reddit's public RSS feed for a subreddit. Atom format, no login needed."""
     url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
-    resp = _safe_get(url)
+    resp = _safe_get(url, headers=REDDIT_HEADERS)
     if not resp:
         return []
     ns = {"atom": "http://www.w3.org/2005/Atom"}
@@ -166,15 +184,20 @@ def fetch_reddit(subreddit: str):
                 "kind": "client",
             })
     except ET.ParseError:
-        pass
+        print(f" [warn] r/{subreddit} feed didn't parse — likely rate-limited or blocked")
     return out
 
 
 def fetch_upwork_rss(search_term: str):
-    """Upwork's public RSS job-search feed. No login required."""
+    """Upwork's public RSS job-search feed. Note: Upwork has increasingly
+    required auth on this endpoint, so a 0-result run may mean the feed is dead,
+    not that there are no matches."""
     url = f"https://www.upwork.com/ab/feed/jobs/rss?q={quote(search_term)}&sort=recency"
     resp = _safe_get(url)
     if not resp:
+        return []
+    if b"<rss" not in resp.content[:500] and b"<?xml" not in resp.content[:100]:
+        print(f" [warn] upwork response for '{search_term}' doesn't look like RSS — feed may require auth now")
         return []
     out = []
     try:
@@ -193,5 +216,5 @@ def fetch_upwork_rss(search_term: str):
                 "kind": "client",
             })
     except ET.ParseError:
-        pass
+        print(f" [warn] upwork feed for '{search_term}' didn't parse as XML")
     return out
