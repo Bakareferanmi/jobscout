@@ -10,24 +10,40 @@ import xml.etree.ElementTree as ET
 from urllib.parse import quote
 
 HEADERS = {"User-Agent": "JobScoutCLI/1.0 (personal job search tool)"}
-# Reddit rate-limits generic UAs hard — use something descriptive.
 REDDIT_HEADERS = {"User-Agent": "python:jobscout-cli:1.0 (personal use)"}
 TIMEOUT = 15
 MAX_RETRIES = 2
-RETRY_BACKOFF = 1.5  # seconds, doubles each retry
+RETRY_BACKOFF = 1.5
+REDDIT_DELAY = 3  # seconds between Reddit requests, to look less like a bot burst
 
 
 def _safe_get(url, params=None, headers=None, retries=MAX_RETRIES):
+    """Retries on 429 and network errors. Does NOT retry on other 4xx
+    (410 Gone, 404, etc.) since those are permanent, not transient."""
     headers = headers or HEADERS
     delay = RETRY_BACKOFF
     for attempt in range(retries + 1):
         try:
             resp = requests.get(url, params=params, headers=headers, timeout=TIMEOUT)
-            if resp.status_code == 429 and attempt < retries:
-                print(f" [warn] rate limited on {url}, retrying in {delay:.1f}s")
+        except requests.RequestException as e:
+            if attempt < retries:
                 time.sleep(delay)
                 delay *= 2
                 continue
+            print(f" [warn] request failed for {url}: {e}")
+            return None
+
+        if resp.status_code == 429 and attempt < retries:
+            print(f" [warn] rate limited on {url}, retrying in {delay:.1f}s")
+            time.sleep(delay)
+            delay *= 2
+            continue
+
+        if 400 <= resp.status_code < 500 and resp.status_code != 429:
+            print(f" [warn] {url} returned {resp.status_code} — not retrying, likely dead/moved")
+            return None
+
+        try:
             resp.raise_for_status()
             return resp
         except requests.RequestException as e:
@@ -37,6 +53,7 @@ def _safe_get(url, params=None, headers=None, retries=MAX_RETRIES):
                 continue
             print(f" [warn] request failed for {url}: {e}")
             return None
+    return None
 
 
 def fetch_remotive(category_key: str, remotive_category: str, search: str = ""):
@@ -158,7 +175,10 @@ def fetch_wwr_rss(feed_url: str):
 
 
 def fetch_reddit(subreddit: str):
-    """Reddit's public RSS feed for a subreddit. Atom format, no login needed."""
+    """Reddit's public RSS feed for a subreddit. Atom format, no login needed.
+    A short delay is added before each call since Reddit rate-limits bursty
+    traffic aggressively, especially from shared mobile IPs."""
+    time.sleep(REDDIT_DELAY)
     url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
     resp = _safe_get(url, headers=REDDIT_HEADERS)
     if not resp:
@@ -170,7 +190,7 @@ def fetch_reddit(subreddit: str):
         for entry in root.findall("atom:entry", ns):
             title = entry.findtext("atom:title", "", ns)
             if title.upper().startswith("[FORHIRE]"):
-                continue  # someone offering services, not hiring — skip
+                continue
             link_el = entry.find("atom:link", ns)
             link = link_el.get("href") if link_el is not None else ""
             updated = entry.findtext("atom:updated", "", ns)
@@ -189,15 +209,15 @@ def fetch_reddit(subreddit: str):
 
 
 def fetch_upwork_rss(search_term: str):
-    """Upwork's public RSS job-search feed. Note: Upwork has increasingly
-    required auth on this endpoint, so a 0-result run may mean the feed is dead,
-    not that there are no matches."""
+    """Upwork's public RSS job-search feed. As of the last check, this
+    endpoint returns 410 Gone for all queries — Upwork appears to have
+    retired public RSS search entirely. Kept in case it comes back."""
     url = f"https://www.upwork.com/ab/feed/jobs/rss?q={quote(search_term)}&sort=recency"
     resp = _safe_get(url)
     if not resp:
         return []
     if b"<rss" not in resp.content[:500] and b"<?xml" not in resp.content[:100]:
-        print(f" [warn] upwork response for '{search_term}' doesn't look like RSS — feed may require auth now")
+        print(f" [warn] upwork response for '{search_term}' doesn't look like RSS")
         return []
     out = []
     try:

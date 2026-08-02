@@ -239,7 +239,7 @@ def _termux_notify(title, content, notif_id=None):
     if notif_id:
         cmd += ["--id", str(notif_id)]
     try:
-        subprocess.run(cmd, check=True, capture_output=True, timeout=10)
+        subprocess.run(cmd, check=True, capture_output=True, timeout=20)
     except FileNotFoundError:
         print(" [warn] termux-notification not found — is Termux:API installed? (pkg install termux-api)")
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:

@@ -1,0 +1,133 @@
+[notify] fetching jobs: Frontend (Intern/Junior)...
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/remotejs/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/remotejs/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/remotejs/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/remotejs/new/.rss
+[notify]   4 new job listing(s)
+[notify] fetching clients (Upwork): Frontend (Intern/Junior)...
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=react%20developer&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=react%20developer&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=landing%20page%20developer&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=landing%20page%20developer&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=frontend%20developer&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=frontend%20developer&sort=recency
+[notify]   0 new client listing(s)
+[notify] fetching jobs: Data Analysis...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching clients (Upwork): Data Analysis...
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=dashboard%20sql&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=dashboard%20sql&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=data%20analyst&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=data%20analyst&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=excel%20data%20entry%20analysis&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=excel%20data%20entry%20analysis&sort=recency
+[notify]   0 new client listing(s)
+[notify] fetching jobs: Social Media / Digital Marketing...
+ [warn] weworkremotely feed didn't parse as XML — check https://weworkremotely.com/categories/remote-marketing-jobs.rss
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/socialmediajobs/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/socialmediajobs/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/socialmediajobs/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/socialmediajobs/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching clients (Upwork): Social Media / Digital Marketing...
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=digital%20marketing&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=digital%20marketing&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=social%20media%20manager&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=social%20media%20manager&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=content%20marketing&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=content%20marketing&sort=recency
+[notify]   0 new client listing(s)
+[notify] fetching jobs: Electrical/Electronics Engineering (Entry-level)...
+[notify]   0 new job listing(s)
+[notify] fetching clients (Upwork): Electrical/Electronics Engineering (Entry-level)...
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=embedded%20systems&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=embedded%20systems&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=iot%20developer&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=iot%20developer&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=electrical%20design&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=electrical%20design&sort=recency
+[notify]   0 new client listing(s)
+[notify] fetching jobs: IT Support...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching clients (Upwork): IT Support...
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=it%20support&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=it%20support&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=helpdesk&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=helpdesk&sort=recency
+ [warn] request failed for https://www.upwork.com/ab/feed/jobs/rss?q=technical%20support%20specialist&sort=recency: 410 Client Error: Gone for url: https://www.upwork.com/ab/feed/jobs/rss?q=technical%20support%20specialist&sort=recency
+[notify]   0 new client listing(s)
+ [warn] notification failed: Command '['termux-notification', '--title', 'JobScout: 2 new match(es)', '--content', '(10) Web Frontend Engineer - JS, CSS, React, Flutter\n(8) Software Developer in Test (JavaScript)', '--id', 'jobscout']' timed out after 10 seconds
+2 new listing(s) scored >= 8. Notification sent.
+[notify] fetching jobs: Frontend (Intern/Junior)...
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/remotejs/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/remotejs/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/remotejs/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/remotejs/new/.rss
+[notify]   1 new job listing(s)
+[notify] fetching clients (Upwork): Frontend (Intern/Junior)...
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=frontend%20developer&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=landing%20page%20developer&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=react%20developer&sort=recency returned 410 — not retrying, likely dead/moved
+[notify]   0 new client listing(s)
+[notify] fetching jobs: Data Analysis...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/jobbit/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/jobbit/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching clients (Upwork): Data Analysis...
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=data%20analyst&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=dashboard%20sql&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=excel%20data%20entry%20analysis&sort=recency returned 410 — not retrying, likely dead/moved
+[notify]   0 new client listing(s)
+[notify] fetching jobs: Social Media / Digital Marketing...
+ [warn] weworkremotely feed didn't parse as XML — check https://weworkremotely.com/categories/remote-marketing-jobs.rss
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+[notify]   5 new job listing(s)
+[notify] fetching clients (Upwork): Social Media / Digital Marketing...
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=content%20marketing&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=social%20media%20manager&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=digital%20marketing&sort=recency returned 410 — not retrying, likely dead/moved
+[notify]   0 new client listing(s)
+[notify] fetching jobs: Electrical/Electronics Engineering (Entry-level)...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+[notify]   0 new job listing(s)
+[notify] fetching clients (Upwork): Electrical/Electronics Engineering (Entry-level)...
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=electrical%20design&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=iot%20developer&sort=recency returned 410 — not retrying, likely dead/moved
+ [warn] https://www.upwork.com/ab/feed/jobs/rss?q=embedded%20systems&sort=recency returned 410 — not retrying, likely dead/moved
+[notify]   0 new client listing(s)
+[notify] fetching jobs: IT Support...
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 1.5s
+ [warn] rate limited on https://www.reddit.com/r/forhire/new/.rss, retrying in 3.0s
+ [warn] request failed for https://www.reddit.com/r/forhire/new/.rss: 429 Client Error: Too Many Requests for url: https://www.reddit.com/r/forhire/new/.rss
+ [warn] rate limited on https://www.reddit.com/r/jobbit/new/.rss, retrying in 1.5s
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/jobscout/main.py", line 354, in <module>
+    main()
+    ~~~~^^
+  File "/data/data/com.termux/files/home/jobscout/main.py", line 350, in main
+    args.func(args)
+    ~~~~~~~~~^^^^^^
+  File "/data/data/com.termux/files/home/jobscout/main.py", line 261, in cmd_notify
+    raw += _fetch_reddit_listings(cat)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/data/data/com.termux/files/home/jobscout/main.py", line 42, in _fetch_reddit_listings
+    raw += sources.fetch_reddit(sub)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/data/data/com.termux/files/home/jobscout/sources.py", line 183, in fetch_reddit
+    resp = _safe_get(url, headers=REDDIT_HEADERS)
+  File "/data/data/com.termux/files/home/jobscout/sources.py", line 38, in _safe_get
+    time.sleep(delay)
+    ~~~~~~~~~~^^^^^^^
+KeyboardInterrupt
