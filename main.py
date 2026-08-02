@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import subprocess
 import textwrap
 import concurrent.futures as cf
 
@@ -58,7 +59,10 @@ def _fetch_client_listings(cat):
 
 
 def _save_listings(raw, cat, kind_override=None):
+    """Returns (new_count, new_listings) — new_listings is the list of dicts
+    that were actually inserted, used by notify to know what to alert on."""
     new_count = 0
+    new_listings = []
     for item in raw:
         if not item.get("title") or not item.get("url"):
             continue
@@ -78,7 +82,8 @@ def _save_listings(raw, cat, kind_override=None):
         }
         if storage.upsert_listing(listing):
             new_count += 1
-    return new_count
+            new_listings.append(listing)
+    return new_count, new_listings
 
 
 def cmd_fetch(args):
@@ -93,14 +98,14 @@ def cmd_fetch(args):
         raw = _fetch_job_listings(cat, cfg)
         raw += _fetch_reddit_listings(cat)
 
-        new_count = _save_listings(raw, cat)
+        new_count, _ = _save_listings(raw, cat)
         print(f" -> {new_count} new job listings saved")
         total_new += new_count
 
         if not args.jobs_only:
             print(f"=== Fetching clients (Upwork): {cfg['label']} ===")
             client_raw = _fetch_client_listings(cat)
-            client_new = _save_listings(client_raw, cat, kind_override="client")
+            client_new, _ = _save_listings(client_raw, cat, kind_override="client")
             print(f" -> {client_new} new client listings saved")
             total_new += client_new
 
@@ -229,6 +234,61 @@ def cmd_review(args):
     print(f"Review session complete. {reviewed} listing(s) updated.")
 
 
+def _termux_notify(title, content, notif_id=None):
+    cmd = ["termux-notification", "--title", title, "--content", content]
+    if notif_id:
+        cmd += ["--id", str(notif_id)]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=10)
+    except FileNotFoundError:
+        print(" [warn] termux-notification not found — is Termux:API installed? (pkg install termux-api)")
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        print(f" [warn] notification failed: {e}")
+
+
+def cmd_notify(args):
+    """Fetch, then send a Termux notification only for genuinely new
+    listings scoring at or above the threshold. Meant to be run on a
+    schedule (see termux-job-scheduler) rather than interactively."""
+    storage.init_db()
+    categories = list(config.CATEGORIES.keys()) if args.category == "all" else [args.category]
+    good_matches = []
+
+    for cat in categories:
+        cfg = config.CATEGORIES[cat]
+        print(f"[notify] fetching jobs: {cfg['label']}...")
+        raw = _fetch_job_listings(cat, cfg)
+        raw += _fetch_reddit_listings(cat)
+        _, new_jobs = _save_listings(raw, cat)
+        print(f"[notify]   {len(new_jobs)} new job listing(s)")
+        good_matches += [m for m in new_jobs if m["score"] >= args.min_score]
+
+        if not args.jobs_only:
+            print(f"[notify] fetching clients (Upwork): {cfg['label']}...")
+            client_raw = _fetch_client_listings(cat)
+            _, new_clients = _save_listings(client_raw, cat, kind_override="client")
+            print(f"[notify]   {len(new_clients)} new client listing(s)")
+            good_matches += [m for m in new_clients if m["score"] >= args.min_score]
+
+    if not good_matches:
+        print("No new listings above threshold. No notification sent.")
+        return
+
+    good_matches.sort(key=lambda m: m["score"], reverse=True)
+
+    if args.per_listing:
+        for m in good_matches:
+            _termux_notify(f"JobScout ({m['score']}) — {m['category']}", m["title"][:150])
+    else:
+        top = good_matches[:5]
+        body = "\n".join(f"({m['score']}) {m['title'][:60]}" for m in top)
+        if len(good_matches) > 5:
+            body += f"\n+{len(good_matches) - 5} more"
+        _termux_notify(f"JobScout: {len(good_matches)} new match(es)", body, notif_id="jobscout")
+
+    print(f"{len(good_matches)} new listing(s) scored >= {args.min_score}. Notification sent.")
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="jobscout", description="Find and track jobs + client gigs across your target categories.")
     sub = p.add_subparsers(dest="command", required=True)
@@ -273,6 +333,13 @@ def build_parser():
     rv.add_argument("--min-score", type=int, default=None, dest="min_score")
     rv.add_argument("--limit", type=int, default=25)
     rv.set_defaults(func=cmd_review)
+
+    nt = sub.add_parser("notify", help="Fetch and send a Termux notification for new high-score matches")
+    nt.add_argument("--category", choices=cats, default="all")
+    nt.add_argument("--jobs-only", action="store_true")
+    nt.add_argument("--min-score", type=int, default=8, dest="min_score")
+    nt.add_argument("--per-listing", action="store_true", help="One notification per match instead of a summary")
+    nt.set_defaults(func=cmd_notify)
 
     return p
 
