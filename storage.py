@@ -1,4 +1,5 @@
 import sqlite3
+import json
 import hashlib
 import re
 from datetime import datetime
@@ -25,6 +26,9 @@ def init_db():
             source TEXT NOT NULL,
             posted TEXT,
             score INTEGER DEFAULT 0,
+            opportunity_type TEXT DEFAULT 'JOB',
+            match_score INTEGER DEFAULT 0,
+            matched_skills TEXT DEFAULT '[]',
             status TEXT DEFAULT 'new',
             fingerprint TEXT,
             fetched_at TEXT NOT NULL
@@ -33,6 +37,18 @@ def init_db():
     cols = [row["name"] for row in conn.execute("PRAGMA table_info(listings)")]
     if "fingerprint" not in cols:
         conn.execute("ALTER TABLE listings ADD COLUMN fingerprint TEXT")
+    if "opportunity_type" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN opportunity_type TEXT DEFAULT 'JOB'"
+        )
+    if "match_score" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN match_score INTEGER DEFAULT 0"
+        )
+    if "matched_skills" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN matched_skills TEXT DEFAULT '[]'"
+        )
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_fingerprint ON listings (category, kind, fingerprint)"
     )
@@ -72,12 +88,21 @@ def upsert_listing(listing: dict) -> bool:
         return False
 
     conn.execute("""
-        INSERT INTO listings (id, kind, category, title, company, location, url, source, posted, score, status, fingerprint, fetched_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
+        INSERT INTO listings (
+            id, kind, category, title, company, location, url, source,
+            posted, score, opportunity_type, match_score, matched_skills,
+            status, fingerprint, fetched_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
     """, (
         listing["id"], listing["kind"], listing["category"], listing["title"],
         listing.get("company", ""), listing.get("location", ""), listing["url"],
-        listing["source"], listing.get("posted", ""), listing.get("score", 0),
+        listing["source"],
+        listing.get("posted", ""),
+        listing.get("score", 0),
+        listing.get("opportunity_type", "JOB"),
+        listing.get("match_score", 0),
+        json.dumps(listing.get("matched_skills", [])),
         fingerprint,
         datetime.utcnow().isoformat(),
     ))
