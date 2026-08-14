@@ -8,6 +8,7 @@ import config
 import storage
 import sources
 import scoring
+import profile as profile_manager
 
 
 def _fetch_job_listings(cat, cfg):
@@ -289,10 +290,17 @@ def cmd_notify(args):
     print(f"{len(good_matches)} new listing(s) scored >= {args.min_score}. Notification sent.")
 
 
+def cmd_profile(args):
+    profile_manager.Profile.load().display()
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="jobscout", description="Find and track jobs + client gigs across your target categories.")
     sub = p.add_subparsers(dest="command", required=True)
     cats = list(config.CATEGORIES.keys()) + ["all"]
+
+    prof = sub.add_parser("profile", help="Show your professional profile")
+    prof.set_defaults(func=cmd_profile)
 
     f = sub.add_parser("fetch", help="Pull fresh listings from all sources")
     f.add_argument("--category", choices=cats, default="all")
