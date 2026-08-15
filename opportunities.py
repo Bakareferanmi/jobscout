@@ -4,6 +4,21 @@ from typing import List
 from profile import Profile
 
 
+NEGATIVE_INTENT_TERMS = [
+    "[for hire]",
+    "for hire",
+    "available for hire",
+    "seeking work",
+    "looking for work",
+    "looking for a job",
+    "open to work",
+    "freelance developer available",
+    "developer available",
+    "i am a developer",
+    "i'm a developer",
+]
+
+
 OPPORTUNITY_TYPES = {
     "JOB",
     "CLIENT",
@@ -51,6 +66,11 @@ class Opportunity:
 def classify_opportunity(title: str, description: str = "") -> str:
     text = f"{title} {description}".lower()
 
+    # First determine whether the author is offering their own services.
+    # These are not opportunities for Bakare.
+    if any(term in text for term in NEGATIVE_INTENT_TERMS):
+        return "IGNORE"
+
     web3_terms = [
         "web3",
         "blockchain",
@@ -59,6 +79,27 @@ def classify_opportunity(title: str, description: str = "") -> str:
         "crypto",
         "smart contract",
         "dapp",
+    ]
+
+    client_terms = [
+        "website",
+        "web site",
+        "landing page",
+        "business website",
+        "web application",
+        "web app",
+        "mobile app",
+        "application development",
+        "build a website",
+        "build a web app",
+        "build an app",
+        "need a developer",
+        "need a web developer",
+        "need someone to build",
+        "developer needed",
+        "website needed",
+        "website development",
+        "web development",
     ]
 
     startup_terms = [
@@ -76,29 +117,18 @@ def classify_opportunity(title: str, description: str = "") -> str:
         "freelancer",
         "contract",
         "gig",
-        "project",
         "fixed price",
-    ]
-
-    client_terms = [
-        "website",
-        "web site",
-        "landing page",
-        "business website",
-        "build a website",
-        "need a developer",
-        "need a web developer",
-        "need someone to build",
+        "client project",
     ]
 
     if any(term in text for term in web3_terms):
         return "WEB3"
 
-    if any(term in text for term in startup_terms):
-        return "STARTUP"
-
     if any(term in text for term in client_terms):
         return "CLIENT"
+
+    if any(term in text for term in startup_terms):
+        return "STARTUP"
 
     if any(term in text for term in freelance_terms):
         return "FREELANCE"
@@ -112,22 +142,16 @@ def calculate_match(
     profile: Profile,
 ) -> tuple[int, List[str]]:
     text = f"{title} {description}".lower()
-
     matched = []
 
+    # Technical skill matches.
     for skill in profile.skills:
-        skill_lower = skill.lower()
-
-        # Match both the full skill and common spacing variations.
-        if skill_lower in text:
+        if skill.lower() in text:
             matched.append(skill)
 
-    score = 0
+    score = min(len(matched) * 12, 48)
 
-    # Skills are the strongest signal.
-    score += min(len(matched) * 12, 60)
-
-    # Role relevance.
+    # Target-role relevance.
     role_text = title.lower()
 
     for role in profile.target_roles:
@@ -138,21 +162,52 @@ def calculate_match(
             break
 
     # Service relevance.
-    for service in profile.services:
-        if service.lower() in text:
-            score += 10
-            break
+    service_matches = 0
 
-    # Opportunity-type relevance.
+    service_keywords = {
+        "business websites": [
+            "website", "web site", "business website",
+            "landing page",
+        ],
+        "web applications": [
+            "web app", "web application", "web platform",
+        ],
+        "startup mvps": [
+            "mvp", "startup", "prototype", "product",
+        ],
+        "landing pages": [
+            "landing page",
+        ],
+        "ai integrations": [
+            "ai", "artificial intelligence", "gemini",
+            "chatbot", "ai agent",
+        ],
+        "mobile applications": [
+            "mobile app", "android app", "ios app",
+            "react native",
+        ],
+    }
+
+    for service, keywords in service_keywords.items():
+        if any(keyword in text for keyword in keywords):
+            service_matches += 1
+
+    # Commercial/service intent is a strong signal.
+    score += min(service_matches * 18, 36)
+
     opportunity_type = classify_opportunity(title, description)
 
-    if opportunity_type in {
-        "CLIENT",
-        "STARTUP",
-        "FREELANCE",
-        "WEB3",
-    }:
+    if opportunity_type == "IGNORE":
+        return 0, matched
+
+    if opportunity_type == "CLIENT":
+        score += 16
+    elif opportunity_type == "STARTUP":
         score += 10
+    elif opportunity_type == "FREELANCE":
+        score += 8
+    elif opportunity_type == "WEB3":
+        score += 6
 
     return min(score, 100), matched
 

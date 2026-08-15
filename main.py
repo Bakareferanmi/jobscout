@@ -290,6 +290,59 @@ def cmd_notify(args):
     print(f"{len(good_matches)} new listing(s) scored >= {args.min_score}. Notification sent.")
 
 
+def cmd_reanalyze(args):
+    import json
+    import opportunities
+
+    conn = storage._connect()
+
+    rows = conn.execute("""
+        SELECT id, title, company, category, kind, source, url
+        FROM listings
+    """).fetchall()
+
+    updated = 0
+
+    for row in rows:
+        description = (
+            f"{row['company'] or ''} "
+            f"{row['category'] or ''} "
+            f"{row['kind'] or ''}"
+        )
+
+        result = opportunities.analyze(
+            title=row["title"] or "",
+            description=description,
+            source=row["source"] or "",
+            url=row["url"] or "",
+        )
+
+        conn.execute("""
+            UPDATE listings
+            SET opportunity_type = ?,
+                match_score = ?,
+                matched_skills = ?
+            WHERE id = ?
+        """, (
+            result.opportunity_type,
+            result.score,
+            json.dumps(result.matched_skills),
+            row["id"],
+        ))
+
+        updated += 1
+
+    conn.commit()
+    conn.close()
+
+    print()
+    print("=" * 60)
+    print("REANALYSIS COMPLETE")
+    print("=" * 60)
+    print(f"Updated: {updated} listing(s)")
+    print()
+
+
 def cmd_opportunities(args):
     conn = storage._connect()
 
@@ -364,6 +417,12 @@ def build_parser():
     p = argparse.ArgumentParser(prog="jobscout", description="Find and track jobs + client gigs across your target categories.")
     sub = p.add_subparsers(dest="command", required=True)
     cats = list(config.CATEGORIES.keys()) + ["all"]
+
+    rea = sub.add_parser(
+        "reanalyze",
+        help="Re-score existing listings against your profile"
+    )
+    rea.set_defaults(func=cmd_reanalyze)
 
     opp = sub.add_parser(
         "opportunities",
