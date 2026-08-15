@@ -290,6 +290,72 @@ def cmd_notify(args):
     print(f"{len(good_matches)} new listing(s) scored >= {args.min_score}. Notification sent.")
 
 
+def cmd_opportunities(args):
+    conn = storage._connect()
+
+    query = """
+        SELECT title, company, location, url, source,
+               opportunity_type, match_score, matched_skills
+        FROM listings
+        WHERE match_score >= ?
+    """
+    params = [args.min_score]
+
+    if args.type:
+        query += " AND opportunity_type = ?"
+        params.append(args.type.upper())
+
+    query += " ORDER BY match_score DESC, rowid DESC"
+
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+
+    print()
+    print("=" * 64)
+    print("                 YOUR OPPORTUNITIES")
+    print("=" * 64)
+
+    if not rows:
+        print()
+        print("No matching opportunities found.")
+        print()
+        print(f"Try lowering --min-score below {args.min_score}.")
+        return
+
+    for row in rows:
+        print()
+        print(f"🔥 {row['match_score']}%  {row['opportunity_type']}")
+        print("-" * 64)
+        print(row["title"])
+
+        if row["company"]:
+            print(f"Company: {row['company']}")
+
+        if row["location"]:
+            print(f"Location: {row['location']}")
+
+        skills = row["matched_skills"] or "[]"
+
+        try:
+            import json
+            skills = json.loads(skills)
+        except Exception:
+            skills = []
+
+        if skills:
+            print("Skills: " + ", ".join(skills))
+
+        print(f"Source: {row['source']}")
+
+        if row["url"]:
+            print(f"URL: {row['url']}")
+
+    print()
+    print("=" * 64)
+    print(f"Found {len(rows)} opportunity(s)")
+    print("=" * 64)
+
+
 def cmd_profile(args):
     profile_manager.Profile.load().display()
 
@@ -298,6 +364,23 @@ def build_parser():
     p = argparse.ArgumentParser(prog="jobscout", description="Find and track jobs + client gigs across your target categories.")
     sub = p.add_subparsers(dest="command", required=True)
     cats = list(config.CATEGORIES.keys()) + ["all"]
+
+    opp = sub.add_parser(
+        "opportunities",
+        help="Show opportunities matched to your profile"
+    )
+    opp.add_argument(
+        "--min-score",
+        type=int,
+        default=50,
+        help="Minimum personal match score (default: 50)"
+    )
+    opp.add_argument(
+        "--type",
+        choices=["JOB", "CLIENT", "STARTUP", "FREELANCE", "WEB3"],
+        help="Filter by opportunity type"
+    )
+    opp.set_defaults(func=cmd_opportunities)
 
     prof = sub.add_parser("profile", help="Show your professional profile")
     prof.set_defaults(func=cmd_profile)
