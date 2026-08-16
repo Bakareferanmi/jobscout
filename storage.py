@@ -49,6 +49,22 @@ def init_db():
         conn.execute(
             "ALTER TABLE listings ADD COLUMN matched_skills TEXT DEFAULT '[]'"
         )
+    if "lead_type" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN lead_type TEXT DEFAULT 'JOB'"
+        )
+    if "intent" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN intent TEXT DEFAULT 'EMPLOYMENT'"
+        )
+    if "commercial_value" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN commercial_value TEXT DEFAULT 'LOW'"
+        )
+    if "recommended_action" not in cols:
+        conn.execute(
+            "ALTER TABLE listings ADD COLUMN recommended_action TEXT DEFAULT 'REVIEW'"
+        )
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_fingerprint ON listings (category, kind, fingerprint)"
     )

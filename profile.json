@@ -1,0 +1,40 @@
+{
+  "name": "Bakare Feranmi",
+  "title": "Frontend Software Engineer",
+  "level": "Junior / Intern",
+  "email": "bakareferanmi96@gmail.com",
+  "portfolio": "https://BeepeeLabs.vercel.app",
+  "github": "https://github.com/Bakareferanmi",
+  "skills": [
+    "React",
+    "JavaScript",
+    "TypeScript",
+    "Next.js",
+    "Tailwind CSS",
+    "Node.js",
+    "React Native",
+    "AI/API Integration"
+  ],
+  "services": [
+    "Business websites",
+    "Web applications",
+    "Startup MVPs",
+    "Landing pages",
+    "AI integrations",
+    "Mobile applications"
+  ],
+  "target_roles": [
+    "Frontend Software Engineer",
+    "Junior Software Engineer",
+    "React Developer",
+    "Frontend Developer"
+  ],
+  "target_opportunities": [
+    "Junior roles",
+    "Internships",
+    "Startup collaborations",
+    "Freelance projects",
+    "Web3 projects"
+  ],
+  "remote": true
+}

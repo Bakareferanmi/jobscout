@@ -1,0 +1,257 @@
+52-    with cf.ThreadPoolExecutor(max_workers=min(3, len(terms))) as ex:
+53-        futures = [ex.submit(sources.fetch_upwork_rss, term) for term in terms]
+54-        for fut in cf.as_completed(futures):
+55-            try:
+56-                raw += fut.result()
+57-            except Exception as e:
+58-                print(f" [warn] upwork fetch raised an exception: {e}")
+59-    return raw
+60-
+61-
+62:def _save_listings(raw, cat, kind_override=None):
+63-    """Returns (new_count, new_listings) — new_listings is the list of dicts
+64-    that were actually inserted, used by notify to know what to alert on."""
+65-    new_count = 0
+66-    new_listings = []
+67-    for item in raw:
+68-        if not item.get("title") or not item.get("url"):
+69-            continue
+70-        if not scoring.matches_category(item["title"], cat):
+71-            continue
+72-        listing = {
+73-            "id": storage.make_id(item["source"], item["url"]),
+74-            "kind": kind_override or item["kind"],
+75-            "category": cat,
+76-            "title": item["title"].strip(),
+77-            "company": item.get("company", ""),
+78-            "location": item.get("location", ""),
+79-            "url": item["url"],
+80-            "source": item["source"],
+81-            "posted": item.get("posted", ""),
+82-            "score": scoring.score_listing(item["title"], cat, item.get("posted", "")),
+83-        }
+84-        if storage.upsert_listing(listing):
+85-            new_count += 1
+86-            new_listings.append(listing)
+87-    return new_count, new_listings
+88-
+89-
+90-def cmd_fetch(args):
+91-    storage.init_db()
+92-    categories = list(config.CATEGORIES.keys()) if args.category == "all" else [args.category]
+93-    total_new = 0
+94-
+95-    for cat in categories:
+96-        cfg = config.CATEGORIES[cat]
+97-        print(f"\n=== Fetching jobs: {cfg['label']} ===")
+98-
+99-        raw = _fetch_job_listings(cat, cfg)
+100-        raw += _fetch_reddit_listings(cat)
+101-
+102:        new_count, _ = _save_listings(raw, cat)
+103-        print(f" -> {new_count} new job listings saved")
+104-        total_new += new_count
+105-
+106-        if not args.jobs_only:
+107-            print(f"=== Fetching clients (Upwork): {cfg['label']} ===")
+108-            client_raw = _fetch_client_listings(cat)
+109:            client_new, _ = _save_listings(client_raw, cat, kind_override="client")
+110-            print(f" -> {client_new} new client listings saved")
+111-            total_new += client_new
+112-
+113-    print(f"\nDone. {total_new} new listings added. Run 'python main.py list' to see them.")
+114-
+115-
+116-def cmd_list(args):
+117-    storage.init_db()
+118-    rows = storage.list_listings(
+119-        category=args.category, status=args.status, kind=args.kind,
+120-        limit=args.limit, min_score=args.min_score,
+121-    )
+122-    if not rows:
+123-        print("No listings found. Try 'python main.py fetch --category all' first.")
+124-        return
+125-    for r in rows:
+126-        tag = "[JOB]" if r["kind"] == "job" else "[CLIENT]"
+127-        print(f"{r['id']} {tag} score={r['score']:<3} [{r['status']}] {r['title']}")
+128-        print(f"    {r['company'] or ''} | {r['category']} | via {r['source']}")
+129-    print(f"\n{len(rows)} shown. Use 'python main.py show <id>' for details.")
+130-
+131-
+132-def cmd_show(args):
+133-    storage.init_db()
+134-    r = storage.get_listing(args.id)
+135-    if not r:
+136-        print("Not found.")
+137-        return
+138-    print(textwrap.dedent(f"""
+139-        ID: {r['id']}
+140-        Title: {r['title']}
+141-        Company: {r['company']}
+142-        Category: {r['category']}
+143-        Kind: {r['kind']}
+144-        Location: {r['location']}
+145-        Source: {r['source']}
+146-        Posted: {r['posted']}
+147-        Status: {r['status']}
+148-        Score: {r['score']}
+149-        URL: {r['url']}
+150-    """).strip())
+151-
+152-
+153-def cmd_status(args):
+154-    storage.init_db()
+155-    ok = storage.set_status(args.id, args.new_status)
+156-    print("Updated." if ok else "No listing found with that ID.")
+157-
+158-
+159-def cmd_stats(args):
+160-    storage.init_db()
+161-    rows = storage.stats()
+162-    if not rows:
+163-        print("No data yet.")
+164-        return
+165-    from collections import defaultdict
+166-    grid = defaultdict(dict)
+167-    for r in rows:
+168-        grid[r["category"]][r["status"]] = r["n"]
+169-    for cat, statuses in grid.items():
+170-        parts = ", ".join(f"{k}={v}" for k, v in statuses.items())
+171-        print(f"{cat:20s} {parts}")
+172-
+173-
+174-def cmd_export(args):
+175-    import csv
+176-    storage.init_db()
+177-    rows = storage.export_listings(
+178-        category=args.category, status=args.status, kind=args.kind, min_score=args.min_score,
+179-    )
+180-    if not rows:
+181-        print("No listings match those filters — nothing to export.")
+182-        return
+183-    fieldnames = ["id", "kind", "category", "title", "company", "location",
+184-                  "url", "source", "posted", "score", "status", "fetched_at"]
+185-    with open(args.output, "w", newline="", encoding="utf-8") as f:
+186-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+187-        writer.writeheader()
+188-        for r in rows:
+189-            writer.writerow({k: r[k] for k in fieldnames})
+190-    print(f"Exported {len(rows)} listings to {args.output}")
+191-
+192-
+193-def cmd_review(args):
+194-    """Walk through 'new' listings one at a time and triage with a single keystroke."""
+195-    storage.init_db()
+196-    rows = storage.list_listings(
+197-        category=args.category, status="new", kind=args.kind,
+198-        limit=args.limit, min_score=args.min_score,
+199-    )
+--
+253-    schedule (see termux-job-scheduler) rather than interactively."""
+254-    storage.init_db()
+255-    categories = list(config.CATEGORIES.keys()) if args.category == "all" else [args.category]
+256-    good_matches = []
+257-
+258-    for cat in categories:
+259-        cfg = config.CATEGORIES[cat]
+260-        print(f"[notify] fetching jobs: {cfg['label']}...")
+261-        raw = _fetch_job_listings(cat, cfg)
+262-        raw += _fetch_reddit_listings(cat)
+263:        _, new_jobs = _save_listings(raw, cat)
+264-        print(f"[notify]   {len(new_jobs)} new job listing(s)")
+265-        good_matches += [m for m in new_jobs if m["score"] >= args.min_score]
+266-
+267-        if not args.jobs_only:
+268-            print(f"[notify] fetching clients (Upwork): {cfg['label']}...")
+269-            client_raw = _fetch_client_listings(cat)
+270:            _, new_clients = _save_listings(client_raw, cat, kind_override="client")
+271-            print(f"[notify]   {len(new_clients)} new client listing(s)")
+272-            good_matches += [m for m in new_clients if m["score"] >= args.min_score]
+273-
+274-    if not good_matches:
+275-        print("No new listings above threshold. No notification sent.")
+276-        return
+277-
+278-    good_matches.sort(key=lambda m: m["score"], reverse=True)
+279-
+280-    if args.per_listing:
+281-        for m in good_matches:
+282-            _termux_notify(f"JobScout ({m['score']}) — {m['category']}", m["title"][:150])
+283-    else:
+284-        top = good_matches[:5]
+285-        body = "\n".join(f"({m['score']}) {m['title'][:60]}" for m in top)
+286-        if len(good_matches) > 5:
+287-            body += f"\n+{len(good_matches) - 5} more"
+288-        _termux_notify(f"JobScout: {len(good_matches)} new match(es)", body, notif_id="jobscout")
+289-
+290-    print(f"{len(good_matches)} new listing(s) scored >= {args.min_score}. Notification sent.")
+291-
+292-
+293-def cmd_profile(args):
+294-    profile_manager.Profile.load().display()
+295-
+296-
+297-def build_parser():
+298-    p = argparse.ArgumentParser(prog="jobscout", description="Find and track jobs + client gigs across your target categories.")
+299-    sub = p.add_subparsers(dest="command", required=True)
+300-    cats = list(config.CATEGORIES.keys()) + ["all"]
+301-
+302-    prof = sub.add_parser("profile", help="Show your professional profile")
+303-    prof.set_defaults(func=cmd_profile)
+304-
+305-    f = sub.add_parser("fetch", help="Pull fresh listings from all sources")
+306-    f.add_argument("--category", choices=cats, default="all")
+307-    f.add_argument("--jobs-only", action="store_true", help="Skip client/Upwork search")
+308-    f.set_defaults(func=cmd_fetch)
+309-
+310-    l = sub.add_parser("list", help="List saved listings, ranked by score")
+311-    l.add_argument("--category", choices=list(config.CATEGORIES.keys()))
+312-    l.add_argument("--status", choices=["new", "saved", "applied", "rejected"])
+313-    l.add_argument("--kind", choices=["job", "client"])
+314-    l.add_argument("--limit", type=int, default=25)
+315-    l.add_argument("--min-score", type=int, default=None, dest="min_score")
+316-    l.set_defaults(func=cmd_list)
+317-
+318-    s = sub.add_parser("show", help="Show full details for one listing")
+319-    s.add_argument("id")
+320-    s.set_defaults(func=cmd_show)
+321-
+322-    st = sub.add_parser("status", help="Update a listing's status")
+323-    st.add_argument("id")
+324-    st.add_argument("new_status", choices=["new", "saved", "applied", "rejected"])
+325-    st.set_defaults(func=cmd_status)
+326-
+327-    stat = sub.add_parser("stats", help="Show counts by category and status")
+328-    stat.set_defaults(func=cmd_stats)
+329-
+330-    ex = sub.add_parser("export", help="Export listings to CSV")
+331-    ex.add_argument("--category", choices=list(config.CATEGORIES.keys()))
+332-    ex.add_argument("--status", choices=["new", "saved", "applied", "rejected"])
+333-    ex.add_argument("--kind", choices=["job", "client"])
+334-    ex.add_argument("--min-score", type=int, default=None, dest="min_score")
+335-    ex.add_argument("--output", default="jobscout_export.csv")
+336-    ex.set_defaults(func=cmd_export)
+337-
+338-    rv = sub.add_parser("review", help="Interactively triage new listings one at a time")
+339-    rv.add_argument("--category", choices=list(config.CATEGORIES.keys()))
+340-    rv.add_argument("--kind", choices=["job", "client"])
+341-    rv.add_argument("--min-score", type=int, default=None, dest="min_score")
+342-    rv.add_argument("--limit", type=int, default=25)
+343-    rv.set_defaults(func=cmd_review)
+344-
+345-    nt = sub.add_parser("notify", help="Fetch and send a Termux notification for new high-score matches")
+346-    nt.add_argument("--category", choices=cats, default="all")
+347-    nt.add_argument("--jobs-only", action="store_true")
+348-    nt.add_argument("--min-score", type=int, default=8, dest="min_score")
+349-    nt.add_argument("--per-listing", action="store_true", help="One notification per match instead of a summary")
+350-    nt.set_defaults(func=cmd_notify)
+351-
+352-    return p
+353-
+354-
+355-def main():
+356-    parser = build_parser()
+357-    args = parser.parse_args()
+358-    args.func(args)
+359-
+360-
