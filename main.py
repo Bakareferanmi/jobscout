@@ -293,6 +293,7 @@ def cmd_notify(args):
 def cmd_reanalyze(args):
     import json
     import opportunities
+    import leads
 
     conn = storage._connect()
 
@@ -317,16 +318,33 @@ def cmd_reanalyze(args):
             url=row["url"] or "",
         )
 
+        lead = leads.analyze(
+            title=row["title"] or "",
+            company=row["company"] or "",
+            category=row["category"] or "",
+            kind=row["kind"] or "",
+            opportunity_type=result.opportunity_type,
+            match_score=result.score,
+        )
+
         conn.execute("""
             UPDATE listings
             SET opportunity_type = ?,
                 match_score = ?,
-                matched_skills = ?
+                matched_skills = ?,
+                lead_type = ?,
+                intent = ?,
+                commercial_value = ?,
+                recommended_action = ?
             WHERE id = ?
         """, (
             result.opportunity_type,
             result.score,
             json.dumps(result.matched_skills),
+            lead.lead_type,
+            lead.intent,
+            lead.commercial_value,
+            lead.recommended_action,
             row["id"],
         ))
 
@@ -340,6 +358,75 @@ def cmd_reanalyze(args):
     print("REANALYSIS COMPLETE")
     print("=" * 60)
     print(f"Updated: {updated} listing(s)")
+    print()
+
+
+def cmd_leads(args):
+    conn = storage._connect()
+
+    query = """
+        SELECT title, company, location, url, source,
+               opportunity_type, match_score,
+               lead_type, intent, commercial_value,
+               recommended_action
+        FROM listings
+        WHERE match_score >= ?
+          AND lead_type != 'IGNORE'
+    """
+
+    params = [args.min_score]
+
+    if args.value:
+        query += " AND commercial_value = ?"
+        params.append(args.value.upper())
+
+    if args.action:
+        query += " AND recommended_action = ?"
+        params.append(args.action.upper())
+
+    query += """
+        ORDER BY
+            CASE commercial_value
+                WHEN 'HIGH' THEN 3
+                WHEN 'MEDIUM' THEN 2
+                WHEN 'LOW' THEN 1
+                ELSE 0
+            END DESC,
+            match_score DESC
+    """
+
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+
+    print()
+    print("=" * 64)
+    print("                       HIGH-VALUE LEADS")
+    print("=" * 64)
+
+    if not rows:
+        print()
+        print("No leads found.")
+        print()
+        return
+
+    for row in rows:
+        print()
+        print(f"🔥 {row['match_score']}%  {row['lead_type']}")
+        print("-" * 64)
+        print(row["title"])
+        print(f"Company:  {row['company'] or 'Unknown'}")
+        print(f"Location: {row['location'] or 'Remote'}")
+        print(f"Source:   {row['source']}")
+        print()
+        print(f"Intent:   {row['intent']}")
+        print(f"Value:    {row['commercial_value']}")
+        print(f"Action:   {row['recommended_action']}")
+        print(f"URL:      {row['url']}")
+
+    print()
+    print("=" * 64)
+    print(f"Found {len(rows)} lead(s)")
+    print("=" * 64)
     print()
 
 
@@ -423,6 +510,28 @@ def build_parser():
         help="Re-score existing listings against your profile"
     )
     rea.set_defaults(func=cmd_reanalyze)
+
+    ld = sub.add_parser(
+        "leads",
+        help="Show actionable recruiter and client leads"
+    )
+    ld.add_argument(
+        "--min-score",
+        type=int,
+        default=30,
+        help="Minimum match score (default: 30)"
+    )
+    ld.add_argument(
+        "--value",
+        choices=["HIGH", "MEDIUM", "LOW"],
+        help="Filter by commercial value"
+    )
+    ld.add_argument(
+        "--action",
+        choices=["CONTACT", "PITCH", "APPLY", "REVIEW", "IGNORE"],
+        help="Filter by recommended action"
+    )
+    ld.set_defaults(func=cmd_leads)
 
     opp = sub.add_parser(
         "opportunities",
